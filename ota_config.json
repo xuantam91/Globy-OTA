@@ -1,0 +1,22 @@
+{
+    "jiuchuan-s3": {
+        "model": "Globy Rabbit Pro",
+        "version": "2.1.5",
+        "file": "jiuchuan-s3\/xiaozhi.bin",
+        "size": 3948704,
+        "date": "2026-05-25 10:52:43",
+        "notes": "- Th\u00eam t\u00ednh n\u0103ng s\u1eed d\u1ee5ng offline kh\u00f4ng c\u00f3 wifi\r\n- S\u1eed l\u1ed7i crash,th\u00eam n\u00fat hard-reset nh\u1ea5n gi\u1eef n\u00fat Vol- v\u00e0 Vol+",
+        "force": 0,
+        "enable": 1
+    },
+    "luxiaoban-xiaozhi-1.54tft": {
+        "model": "Globy Tiger Plus",
+        "version": "2.1.0",
+        "file": "luxiaoban-xiaozhi-1.54tft\/xiaozhi.bin",
+        "size": 3574304,
+        "date": "2026-05-01 16:00:00",
+        "notes": "th\u00eam m\u00e0n h\u00ecnh ch\u1edd, th\u00eam t\u00ednh n\u0103ng \u0111\u1ed5i c\u1ea5u h\u00ecnh t\u1eeb \u0111i\u1ec7n tho\u1ea1i",
+        "force": 0,
+        "enable": 1
+    }
+}

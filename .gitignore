@@ -1,0 +1,13 @@
+# Ignore logs
+ota_debug.log
+error_log
+
+# Ignore firmware and assets binaries
+ota_fw/
+ota_assets/
+
+# Ignore backups
+GlobyOTA-V01.zip
+
+# System files
+.DS_Store

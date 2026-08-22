@@ -1,0 +1,15 @@
+{
+    "recovery_email": "techgloby@gmail.com",
+    "users": {
+        "globya1": {
+            "username": "GlobyA1",
+            "password_hash": "$2y$12$tTTpP/93/GNgPyTvBweoK.n3KrOEjHxSZu8nuBwyP35ZfwCL/vUyy",
+            "created_at": "2026-03-16T13:20:00+07:00"
+        },
+        "globya2": {
+            "username": "GlobyA2",
+            "password_hash": "$2y$12$71c5iomYIqtKm2zHQ034A.9cdG.UG3mU2Fwzg.XQruEopynz.8gly",
+            "created_at": "2026-03-16T13:20:00+07:00"
+        }
+    }
+}

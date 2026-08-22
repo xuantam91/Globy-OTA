@@ -1,0 +1,24 @@
+{
+    "jiuchuan-s3": {
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "Pro-Minions-HiTelly",
+        "checksum": "00001e63",
+        "file": "jiuchuan-s3/assets.bin",
+        "size": 5275245,
+        "date": "2026-04-14 16:22:25",
+        "notes": "Globy Pro, Minions, HiTelly",
+        "enable": 0
+    },
+    "luxiaoban-xiaozhi-1.54tft": {
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "Plus-Doremon-HiLily",
+        "checksum": "00004658",
+        "file": "luxiaoban-xiaozhi-1.54tft/assets.bin",
+        "size": 4011064,
+        "date": "2026-04-10 16:20:56",
+        "notes": "Doremon - Hi Telly-Asset for Tiger Plus",
+        "enable": 0
+    }
+}

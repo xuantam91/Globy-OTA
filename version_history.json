@@ -1,0 +1,137 @@
+[
+    {
+        "date": "2025-12-18 17:54:53",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.0.6",
+        "file": "xiaozhi.bin",
+        "size": 3994656,
+        "notes": "1. Adding VNexpress News\r\n2. Adding OTA update via Globy.tech\r\n3. Fix Bugs"
+    },
+    {
+        "date": "2025-12-18 19:35:08",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.0.7",
+        "file": "xiaozhi.bin",
+        "size": 3933216,
+        "notes": "-Adding VN Express NEWs\r\n-Adding Radio english\r\n-Adding OTA update\r\n-Fix Bugs"
+    },
+    {
+        "date": "2025-12-24 17:56:52",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.0.8",
+        "file": "xiaozhi.bin",
+        "size": 3932704,
+        "notes": "-Th\u00eam font hi\u1ec3n th\u1ecb ti\u1ebfng Trung & Vi\u1ec7t.\r\n-Th\u00eam h\u01b0\u1edbng d\u1eabn s\u1eed d\u1ee5ng khi k\u1ebft n\u1ed1i wifi xong\r\n-D\u1ed5i wake word th\u00e0nh Hi Lily, t\u1ed1i \u01b0u \u0111\u00e1nh th\u1ee9c\r\n-T\u1ed1i \u01b0u h\u1ec7 th\u1ed1ng"
+    },
+    {
+        "date": "2026-01-15 09:47:58",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.0.9",
+        "file": "xiaozhi.bin",
+        "size": 3361424,
+        "notes": "- Update music, Radio UI\r\n- Remove SD Music play for Tiger/Rabbit Plus\r\n- Optimize speeds\r\n- Fix Bug, remove VNexpress News"
+    },
+    {
+        "date": "2026-03-12 16:02:15",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.0.9",
+        "file": "xiaozhi.bin",
+        "size": 3769968,
+        "notes": "- Adding music control via Hard button +/-, Hold + to play. \r\n- Adding Idle Clock Screen, Hold - to change theme. Pink, Orange, Blue."
+    },
+    {
+        "date": "2026-03-21 21:30:47",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "5.5.1",
+        "file": "xiaozhi.bin",
+        "size": 12483223,
+        "notes": "- Adding control Radio via voice & button\r\n- Edit Vol display"
+    },
+    {
+        "date": "2026-03-21 21:32:05",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.0",
+        "file": "xiaozhi.bin",
+        "size": 3849312,
+        "notes": "- Adding control Radio via voice & button\r\n- Edit Vol display"
+    },
+    {
+        "date": "2026-03-26 00:01:57",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.1",
+        "file": "xiaozhi.bin",
+        "size": 3851552,
+        "notes": "- S\u1eeda l\u1ed7i treo khi ph\u00e1t nh\u1ea1c b\u1ea3n quy\u1ec1n"
+    },
+    {
+        "date": "2026-03-29 23:45:12",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.1.0",
+        "file": "xiaozhi.bin",
+        "size": 3362080,
+        "notes": "- S\u1eeda l\u1ed7i ng\u1eaft l\u1eddi khi user \u0111ang n\u00f3i"
+    },
+    {
+        "date": "2026-04-08 08:55:53",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.2",
+        "file": "xiaozhi.bin",
+        "size": 3858704,
+        "notes": "update color profile for new screen"
+    },
+    {
+        "date": "2026-04-10 16:27:03",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.0.9",
+        "file": "xiaozhi.bin",
+        "size": 3361424,
+        "notes": "Keep 2.0.9, stable version for Tiger plus"
+    },
+    {
+        "date": "2026-05-01 15:18:55",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.3",
+        "file": "xiaozhi.bin",
+        "size": 3964768,
+        "notes": "Big update for globy pro, menu selection"
+    },
+    {
+        "date": "2026-05-01 16:00:00",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.1.0",
+        "file": "xiaozhi.bin",
+        "size": 3574304,
+        "notes": "th\u00eam m\u00e0n h\u00ecnh ch\u1edd, th\u00eam t\u00ednh n\u0103ng \u0111\u1ed5i c\u1ea5u h\u00ecnh t\u1eeb \u0111i\u1ec7n tho\u1ea1i"
+    },
+    {
+        "date": "2026-05-03 11:40:52",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.4",
+        "file": "xiaozhi.bin",
+        "size": 3969296,
+        "notes": "- B\u1ea3n c\u1eadp nh\u1eadt l\u1edbn cho Globy Pro, th\u00eam UI menu\r\n- Th\u00eam t\u00ednh wifi t\u1ef1 \u0111\u1ed9ng\r\n- T\u1ef1 \u0111\u1ed5i c\u1ea5u h\u00ecnh nh\u00e2n v\u1eadt\r\n- S\u1eeda l\u1ed7i, ho\u1ea1t \u0111\u1ed9ng tr\u00ean c\u1ea3 2 lo\u1ea1i m\u00e0n h\u00ecnh"
+    },
+    {
+        "date": "2026-05-25 10:52:43",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.5",
+        "file": "xiaozhi.bin",
+        "size": 3948704,
+        "notes": "- Th\u00eam t\u00ednh n\u0103ng s\u1eed d\u1ee5ng offline kh\u00f4ng c\u00f3 wifi\r\n- S\u1eed l\u1ed7i crash,th\u00eam n\u00fat hard-reset nh\u1ea5n gi\u1eef n\u00fat Vol- v\u00e0 Vol+"
+    }
+]
