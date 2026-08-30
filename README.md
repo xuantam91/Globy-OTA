@@ -7,7 +7,8 @@ Hệ thống quản lý và cập nhật phần mềm từ xa (OTA - Over-the-Ai
 - **Cập nhật Firmware**: Phát hành và quản lý phiên bản Firmware (`.bin`) cho từng Model/Board.
 - **Cập nhật Assets**: Phát hành các gói tài nguyên (`assets.bin` bao gồm giao diện, font, ngôn ngữ, hình ảnh).
 - **Ép buộc cập nhật thiết bị (Force Overrides)**: Cho phép cấu hình cập nhật thử nghiệm hoặc khôi phục cho một thiết bị cụ thể dựa trên địa chỉ MAC hoặc UUID mà không ảnh hưởng tới các thiết bị khác.
-- **Quản lý Boards động**: Giao diện Admin cho phép thêm, sửa, xóa các model và board code tương ứng một cách dễ dàng mà không cần can thiệp vào mã nguồn.
+- **Quản lý Boards & Định tuyến phiên bản động (Dynamic Version Routing)**: Giao diện Admin cho phép thêm, sửa, xóa các model và board key. Hỗ trợ cấu hình định tuyến phiên bản dựa trên hậu tố của phiên bản (ví dụ: thiết bị `jiuchuan-s3` chạy firmware kết thúc bằng `-r2` tự động ánh xạ sang board V2, `-r3` sang V3) hoàn toàn động trên giao diện mà không cần sửa mã nguồn.
+- **Thống kê cập nhật thiết bị theo thời gian thực**: Dashboard tự động thống kê số lượng thiết bị hoạt động (Active Devices) đã kết nối, tính toán tỷ lệ máy đã cập nhật thành công trên từng dòng board và hiển thị chi tiết các phiên bản đang chạy.
 - **Bảo mật & Phân quyền**: Đăng nhập trang quản trị sử dụng cơ chế bảo mật session và lưu trữ tài khoản mã hóa bằng mã hash của PHP (`bcrypt`).
 
 ## Cấu trúc thư mục
@@ -18,14 +19,15 @@ Hệ thống quản lý và cập nhật phần mềm từ xa (OTA - Over-the-Ai
 ├── auth.php                # Các hàm xử lý xác thực & phiên làm việc (Session)
 ├── auth_users.json         # Cơ sở dữ liệu tài khoản (Mật khẩu được băm bảo mật)
 ├── index.php               # API endpoint tiếp nhận request OTA từ thiết bị
-├── models.json             # Danh sách Model loa và Board Code tương ứng
+├── boards.json             # Danh sách Model loa, Board Key tương ứng và quy tắc định tuyến phiên bản
 ├── ota_config.json         # Cấu hình các phiên bản firmware hiện tại
 ├── ota_assets_config.json  # Cấu hình các phiên bản assets hiện tại
 ├── device_overrides.json   # Cấu hình ép cập nhật (Firmware) cho từng thiết bị
 ├── asset_overrides.json    # Cấu hình ép cập nhật (Assets) cho từng thiết bị
 ├── version_history.json    # Lịch sử các lần phát hành firmware
-├── ota_fw/                 # [Chưa đẩy] Thư mục chứa các file firmware (.bin)
-└── ota_assets/             # [Chưa đẩy] Thư mục chứa các file assets (.bin)
+├── device_stats.json       # [Ignored] Nhật ký check-in và phiên bản hiện tại của từng thiết bị
+├── ota_fw/                 # [Ignored] Thư mục chứa các file firmware (.bin)
+└── ota_assets/             # [Ignored] Thư mục chứa các file assets (.bin)
 ```
 
 ## Hướng dẫn cài đặt & Cấu hình
@@ -56,7 +58,7 @@ File `auth_users.json` lưu trữ thông tin đăng nhập. Để thay đổi m�
    ```
 2. Mở file `auth_users.json`, cập nhật chuỗi băm nhận được vào trường `"password_hash"` của tài khoản mong muốn.
 
-## API hoạt động (Dành cho Thiết bị Loa)
+## API hoạt động & Định tuyến định dạng (Dành cho Thiết bị Loa)
 
 Thiết bị gửi một request `POST` định kỳ lên endpoint gốc (`/` hoặc `/index.php`) với body JSON mô tả phiên bản hiện tại và thông tin thiết bị:
 ```json
@@ -64,14 +66,15 @@ Thiết bị gửi một request `POST` định kỳ lên endpoint gốc (`/` ho
   "mac_address": "b8:f8:62:e7:ab:90",
   "uuid": "xxx-xxx-xxx",
   "application": {
-    "version": "2.0.9"
+    "version": "2.1.8-R2"
   },
   "board": {
-    "type": "luxiaoban-xiaozhi-1.54tft"
+    "type": "jiuchuan-s3"
   }
 }
 ```
 
-Hệ thống sẽ phản hồi (Response) thông tin cập nhật phù hợp:
-- Nếu có cập nhật (hoặc có bản ghi Force Override đang bật): Trả về link download file `.bin`.
-- Nếu không có cập nhật: Trả về link rỗng.
+Hệ thống sẽ hoạt động như sau:
+1. **Phân tích định tuyến**: Lấy `board.type` (ví dụ `jiuchuan-s3`) và quét các quy tắc trong `boards.json`. Do phiên bản `2.1.8-R2` chứa hậu tố `-r2`, hệ thống tự động ánh xạ thiết bị này sang cấu hình phần cứng của board `jiuchuan-s3-v2`.
+2. **Ghi nhật ký thiết bị**: Check-in của thiết bị được ghi nhận vào `device_stats.json` dưới dòng board được định tuyến (`jiuchuan-s3-v2`).
+3. **Phản hồi OTA**: Trả về thông tin cập nhật (Firmware / Assets) tương ứng với cấu hình của dòng board đó. Trong phản hồi JSON, trường `firmware.name` luôn giữ nguyên là loại board gốc (`jiuchuan-s3`) để thiết bị không bị lỗi xác minh tên board.
