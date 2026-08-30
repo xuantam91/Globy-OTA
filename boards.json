@@ -1,0 +1,21 @@
+{
+    "luxiaoban-xiaozhi-0.96oled-128x64": {
+        "model": "Globy Tiger"
+    },
+    "luxiaoban-xiaozhi-1.54tft": {
+        "model": "Globy Tiger Plus"
+    },
+    "jiuchuan-s3": {
+        "model": "Globy Rabbit Pro"
+    },
+    "jiuchuan-s3-v2": {
+        "model": "Globy Rabbit Pro V2",
+        "route_raw_board": "jiuchuan-s3",
+        "route_suffix": "-r2"
+    },
+    "jiuchuan-s3-v3": {
+        "model": "Globy Rabbit Pro V3",
+        "route_raw_board": "jiuchuan-s3",
+        "route_suffix": "-r3"
+    }
+}

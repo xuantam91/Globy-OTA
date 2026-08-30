@@ -1,6 +1,8 @@
 # Ignore logs
 ota_debug.log
 error_log
+device_stats.json
+device_stats.json.lock
 
 # Ignore firmware and assets binaries
 ota_fw/

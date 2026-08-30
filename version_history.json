@@ -133,5 +133,23 @@
         "file": "xiaozhi.bin",
         "size": 3948704,
         "notes": "- Th\u00eam t\u00ednh n\u0103ng s\u1eed d\u1ee5ng offline kh\u00f4ng c\u00f3 wifi\r\n- S\u1eed l\u1ed7i crash,th\u00eam n\u00fat hard-reset nh\u1ea5n gi\u1eef n\u00fat Vol- v\u00e0 Vol+"
+    },
+    {
+        "date": "2026-08-22 20:41:37",
+        "model": "Globy Tiger Plus",
+        "board": "luxiaoban-xiaozhi-1.54tft",
+        "version": "2.1.1",
+        "file": "xiaozhi.bin",
+        "size": 3596048,
+        "notes": "Fix Loi connect, QR code scan to connect wifi"
+    },
+    {
+        "date": "2026-08-24 17:06:49",
+        "model": "Globy Rabbit Pro",
+        "board": "jiuchuan-s3",
+        "version": "2.1.8",
+        "file": "xiaozhi.bin",
+        "size": 3966976,
+        "notes": "release 2.1.8 adding Learn function, remove online music, optimize setting menu, change AI Agent config system.."
     }
 ]

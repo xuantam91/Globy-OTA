@@ -23,7 +23,6 @@ $fwBasePath         = __DIR__ . "/ota_fw/";
 $assetConfigPath    = __DIR__ . "/ota_assets_config.json";
 $assetOverridePath  = __DIR__ . "/asset_overrides.json";
 $assetBasePath      = __DIR__ . "/ota_assets/";
-$modelsPath         = __DIR__ . "/models.json";
 
 // ================================
 // LOAD JSON
@@ -34,26 +33,29 @@ $deviceOverrides = file_exists($deviceOverridePath) ? json_decode(file_get_conte
 $assetConfig     = file_exists($assetConfigPath) ? json_decode(file_get_contents($assetConfigPath), true) : [];
 $assetOverrides  = file_exists($assetOverridePath) ? json_decode(file_get_contents($assetOverridePath), true) : [];
 
+$boardsFile      = __DIR__ . "/boards.json";
+$boardsMeta      = file_exists($boardsFile) ? json_decode(file_get_contents($boardsFile), true) : [];
+if (!is_array($boardsMeta)) $boardsMeta = [];
+
+// Backwards compatibility mapping for dropdown selectors
+$models = [];
+foreach ($boardsMeta as $bk => $meta) {
+    if (is_array($meta) && isset($meta["model"])) {
+        $models[$meta["model"]] = $bk;
+    } else {
+        $models[$meta] = $bk;
+    }
+}
+
+$statsPath       = __DIR__ . "/device_stats.json";
+$deviceStats     = file_exists($statsPath) ? json_decode(file_get_contents($statsPath), true) : [];
+
 if (!is_array($config)) $config = [];
 if (!is_array($history)) $history = [];
 if (!is_array($deviceOverrides)) $deviceOverrides = [];
 if (!is_array($assetConfig)) $assetConfig = [];
 if (!is_array($assetOverrides)) $assetOverrides = [];
-
-// ================================
-// MODEL → BOARD MAP
-// ================================
-$models = [];
-if (file_exists($modelsPath)) {
-    $models = json_decode(file_get_contents($modelsPath), true);
-}
-if (!is_array($models) || empty($models)) {
-    $models = [
-        "Globy Tiger"      => "luxiaoban-xiaozhi-0.96oled-128x64",
-        "Globy Tiger Plus" => "luxiaoban-xiaozhi-1.54tft",
-        "Globy Rabbit Pro" => "jiuchuan-s3"
-    ];
-}
+if (!is_array($deviceStats)) $deviceStats = [];
 
 // ================================
 // EXTRACT VERSION FROM BIN
@@ -192,24 +194,23 @@ if (isset($_GET["toggle_asset_override"])) {
     exit;
 }
 
-if (isset($_GET["delete_model"])) {
-    $m = (string)$_GET["delete_model"];
-    if (isset($models[$m])) {
-        unset($models[$m]);
-        file_put_contents($modelsPath, json_encode($models, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+if (isset($_GET["delete_board"])) {
+    $boardToDelete = $_GET["delete_board"];
+    if (isset($boardsMeta[$boardToDelete])) {
+        unset($boardsMeta[$boardToDelete]);
+        file_put_contents($boardsFile, json_encode($boardsMeta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        
+        if (isset($config[$boardToDelete])) {
+            unset($config[$boardToDelete]);
+            file_put_contents($configPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        }
+        if (isset($assetConfig[$boardToDelete])) {
+            unset($assetConfig[$boardToDelete]);
+            file_put_contents($assetConfigPath, json_encode($assetConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        }
     }
     header("Location: admin.php");
     exit;
-}
-
-$editModelName = "";
-$editBoardCode = "";
-if (isset($_GET["edit_model"])) {
-    $m = (string)$_GET["edit_model"];
-    if (isset($models[$m])) {
-        $editModelName = $m;
-        $editBoardCode = $models[$m];
-    }
 }
 
 // ================================
@@ -218,22 +219,49 @@ if (isset($_GET["edit_model"])) {
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $action = $_POST["action"] ?? "upload_firmware";
 
-    if ($action === "save_model") {
-        $modelName = trim((string)($_POST["model_name"] ?? ""));
-        $boardCode = trim((string)($_POST["board_code"] ?? ""));
-        $oldModelName = trim((string)($_POST["old_model_name"] ?? ""));
+    if ($action === "save_board") {
+        $newModel    = trim((string)($_POST["new_model_name"] ?? ""));
+        $newBoard    = strtolower(trim((string)($_POST["new_board_key"] ?? "")));
+        $oldBoard    = strtolower(trim((string)($_POST["old_board"] ?? "")));
+        $routeRaw    = strtolower(trim((string)($_POST["route_raw_board"] ?? "")));
+        $routeSuffix = trim((string)($_POST["route_suffix"] ?? ""));
 
-        if ($modelName === "" || $boardCode === "") {
-            die("Invalid model or board code");
+        if (!$newModel || !$newBoard) {
+            die("Invalid board details");
         }
 
-        if ($oldModelName !== "" && $oldModelName !== $modelName && isset($models[$oldModelName])) {
-            unset($models[$oldModelName]);
+        if ($oldBoard !== "" && $oldBoard !== $newBoard) {
+            if (isset($boardsMeta[$oldBoard])) {
+                unset($boardsMeta[$oldBoard]);
+            }
+
+            if (isset($config[$oldBoard])) {
+                $config[$newBoard] = $config[$oldBoard];
+                $config[$newBoard]["model"] = $newModel;
+                unset($config[$oldBoard]);
+                file_put_contents($configPath, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            }
+            if (isset($assetConfig[$oldBoard])) {
+                $assetConfig[$newBoard] = $assetConfig[$oldBoard];
+                $assetConfig[$newBoard]["model"] = $newModel;
+                $assetConfig[$newBoard]["board"] = $newBoard;
+                unset($assetConfig[$oldBoard]);
+                file_put_contents($assetConfigPath, json_encode($assetConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            }
         }
 
-        $models[$modelName] = $boardCode;
-        file_put_contents($modelsPath, json_encode($models, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-        echo "<script>alert('Model saved successfully'); location.href='admin.php';</script>";
+        $entry = ["model" => $newModel];
+        if ($routeRaw !== "") {
+            $entry["route_raw_board"] = $routeRaw;
+        }
+        if ($routeSuffix !== "") {
+            $entry["route_suffix"] = $routeSuffix;
+        }
+
+        $boardsMeta[$newBoard] = $entry;
+
+        file_put_contents($boardsFile, json_encode($boardsMeta, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        echo "<script>alert('Board configuration saved'); location.href='admin.php';</script>";
         exit;
     }
 
@@ -899,6 +927,7 @@ tr:hover td {
 .col-device  { width: 150px; }
 .col-board   { width: 150px; }
 .col-version { width: 72px; }
+.col-stats   { width: 110px; }
 .col-file    { width: 132px; }
 .col-size    { width: 92px; }
 .col-notes   { width: auto; }
@@ -925,6 +954,7 @@ tr:hover td {
 .col-device,
 .col-board,
 .col-version,
+.col-stats,
 .col-file,
 .col-size,
 .col-notes,
@@ -1000,11 +1030,10 @@ tr:hover td {
 </style>
 
 <script>
-const modelsMap = <?= json_encode($models, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
-
 function updateBoard() {
+    const map = <?= json_encode($models) ?>;
     document.getElementById("board").value =
-        modelsMap[document.getElementById("model").value] || "";
+        map[document.getElementById("model").value] || "";
 }
 
 function updateOverrideFirmwareSource() {
@@ -1030,6 +1059,34 @@ function togglePanel(id) {
         button.setAttribute("aria-expanded", collapsed ? "false" : "true");
     }
 }
+
+function editBoard(model, board, routeRaw, routeSuffix) {
+    const panel = document.getElementById('manage-boards-panel');
+    if (panel.classList.contains('collapsed')) {
+        togglePanel('manage-boards-panel');
+    }
+    document.getElementById('board_form_title').textContent = 'Edit Board';
+    document.getElementById('board_model_name').value = model;
+    document.getElementById('board_key').value = board;
+    document.getElementById('board_old_model').value = model;
+    document.getElementById('board_old_board').value = board;
+    document.getElementById('board_route_raw').value = routeRaw || '';
+    document.getElementById('board_route_suffix').value = routeSuffix || '';
+    document.getElementById('board_save_btn').textContent = 'Update Board';
+    document.getElementById('board_cancel_btn').style.display = 'inline-flex';
+}
+
+function cancelEditBoard() {
+    document.getElementById('board_form_title').textContent = 'Add New Board';
+    document.getElementById('board_model_name').value = '';
+    document.getElementById('board_key').value = '';
+    document.getElementById('board_old_model').value = '';
+    document.getElementById('board_old_board').value = '';
+    document.getElementById('board_route_raw').value = '';
+    document.getElementById('board_route_suffix').value = '';
+    document.getElementById('board_save_btn').textContent = 'Add Board';
+    document.getElementById('board_cancel_btn').style.display = 'none';
+}
 </script>
 </head>
 
@@ -1045,6 +1102,7 @@ foreach ($deviceOverrides as $override) {
     if (!empty($override["enable"])) $activeOverrides++;
 }
 $historyCount = count($history);
+$totalUniqueDevices = count($deviceStats);
 ?>
 
 <div class="page">
@@ -1071,67 +1129,91 @@ $historyCount = count($history);
                 <div class="stat-value"><?= $historyCount ?></div>
             </div>
             <div class="stat-card">
-                <span class="stat-label"><span class="stat-icon">&#128202;</span>System Snapshot</span>
-                <div class="stat-value"><?= $enabledBoards ?>/<?= $totalBoards ?></div>
-                <div class="muted">board dang bat OTA</div>
+                <span class="stat-label"><span class="stat-icon">&#128225;</span>Active Devices</span>
+                <div class="stat-value"><?= $totalUniqueDevices ?></div>
+                <div class="muted">unique devices checked-in</div>
             </div>
         </div>
     </div>
 
     <div class="workspace">
         <div class="stack">
-            <section class="panel <?= ($editModelName !== '') ? '' : 'collapsed' ?>" id="models-panel">
+            <section class="panel collapsed" id="manage-boards-panel">
                 <div class="panel-head">
-                    <h2 class="section-title"><span class="icon-mark">&#128187;</span>Manage Boards</h2>
-                    <button type="button" class="panel-toggle" aria-expanded="<?= ($editModelName !== '') ? 'true' : 'false' ?>" onclick="togglePanel('models-panel')"><?= ($editModelName !== '') ? '-' : '+' ?></button>
+                    <h2 class="section-title"><span class="icon-mark">&#128227;</span>Manage Boards</h2>
+                    <button type="button" class="panel-toggle" aria-expanded="false" onclick="togglePanel('manage-boards-panel')">+</button>
                 </div>
-                <p class="panel-intro">Them, sua hoac xoa model/board duoc su dung tren he thong.</p>
+                <p class="panel-intro">Add, edit, or delete board configurations and model mappings.</p>
                 <div class="panel-body">
-                    <form method="POST" class="form-grid">
-                        <input type="hidden" name="action" value="save_model">
-                        <input type="hidden" name="old_model_name" value="<?= htmlspecialchars($editModelName) ?>">
-
-                        <div class="field">
-                            <label>Model Name</label>
-                            <input type="text" name="model_name" placeholder="e.g. Globy Tiger Plus" value="<?= htmlspecialchars($editModelName) ?>" required>
-                        </div>
-
-                        <div class="field">
-                            <label>Board Code</label>
-                            <input type="text" name="board_code" placeholder="e.g. luxiaoban-xiaozhi-1.54tft" value="<?= htmlspecialchars($editBoardCode) ?>" required>
-                        </div>
-
-                        <div class="actions">
-                            <button type="submit"><?= ($editModelName !== "") ? "Update Board" : "Add Board" ?></button>
-                            <?php if ($editModelName !== ""): ?>
-                                <a href="admin.php" class="btn btn-secondary">Cancel</a>
-                            <?php endif; ?>
-                        </div>
-                    </form>
-
-                    <div class="table-wrap" style="margin-top: 16px;">
-                        <table style="width: 100%;">
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 12px; overflow-x: auto;">
+                        <table style="width:100%; border-collapse: collapse; min-width: 320px;">
                             <thead>
-                                <tr>
-                                    <th>Model</th>
-                                    <th>Board Code</th>
-                                    <th>Actions</th>
+                                <tr style="background: var(--panel-strong);">
+                                    <th style="font-size:10px; padding:6px 4px; text-transform:uppercase; color:var(--muted);">Model</th>
+                                    <th style="font-size:10px; padding:6px 4px; text-transform:uppercase; color:var(--muted);">Board Key</th>
+                                    <th style="font-size:10px; padding:6px 4px; text-transform:uppercase; color:var(--muted);">Routing Rule</th>
+                                    <th style="font-size:10px; padding:6px 4px; text-transform:uppercase; color:var(--muted); text-align:right;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($models as $m => $b): ?>
+                                <?php foreach ($boardsMeta as $b => $meta): ?>
+                                <?php
+                                    $m = $meta["model"] ?? "";
+                                    $routeRaw = $meta["route_raw_board"] ?? "";
+                                    $routeSuffix = $meta["route_suffix"] ?? "";
+                                    $routingDisplay = ($routeRaw !== "" && $routeSuffix !== "") ? htmlspecialchars($routeRaw) . " (" . htmlspecialchars($routeSuffix) . ")" : "-";
+                                ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($m) ?></td>
-                                    <td><?= htmlspecialchars($b) ?></td>
-                                    <td>
-                                        <a href="?edit_model=<?= urlencode($m) ?>" style="color: var(--accent); text-decoration: none; margin-right: 8px;">Edit</a>
-                                        <a href="?delete_model=<?= urlencode($m) ?>" onclick="return confirm('Ban co chac muon xoa model nay?');" style="color: var(--danger); text-decoration: none;">Delete</a>
+                                    <td style="padding:6px 4px; font-size:12px; border-top:1px solid rgba(221,207,184,0.4);"><?= htmlspecialchars($m) ?></td>
+                                    <td style="padding:6px 4px; font-size:12px; font-family:monospace; border-top:1px solid rgba(221,207,184,0.4);"><?= htmlspecialchars($b) ?></td>
+                                    <td style="padding:6px 4px; font-size:12px; border-top:1px solid rgba(221,207,184,0.4); color:var(--muted);"><?= $routingDisplay ?></td>
+                                    <td style="padding:6px 4px; font-size:12px; text-align:right; white-space:nowrap; border-top:1px solid rgba(221,207,184,0.4);">
+                                        <a href="javascript:void(0)" onclick="editBoard('<?= addslashes($m) ?>', '<?= addslashes($b) ?>', '<?= addslashes($routeRaw) ?>', '<?= addslashes($routeSuffix) ?>')" style="color:var(--accent); text-decoration:none; margin-right:8px; font-weight:bold;">Edit</a>
+                                        <a href="?delete_board=<?= urlencode($b) ?>" onclick="return confirm('Are you sure you want to delete board mapping for <?= htmlspecialchars($m) ?>?')" style="color:var(--danger); text-decoration:none; font-weight:bold;">Delete</a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+                    
+                    <form method="POST" class="form-grid" id="board-form">
+                        <input type="hidden" name="action" value="save_board">
+                        <input type="hidden" name="old_model" id="board_old_model" value="">
+                        <input type="hidden" name="old_board" id="board_old_board" value="">
+                        
+                        <div class="field">
+                            <label id="board_form_title" style="font-size:14px; color:var(--accent-dark);">Add New Board</label>
+                        </div>
+                        
+                        <div class="field">
+                            <label>Model Name</label>
+                            <input type="text" name="new_model_name" id="board_model_name" placeholder="e.g. Globy Rabbit Pro V2" required>
+                        </div>
+                        
+                        <div class="field">
+                            <label>Board Key</label>
+                            <input type="text" name="new_board_key" id="board_key" placeholder="e.g. jiuchuan-s3-v2" required>
+                            <span class="hint">lowercase, alphanumeric, dashes</span>
+                        </div>
+                        
+                        <div class="field">
+                            <label>Route Raw Board Key (Optional)</label>
+                            <input type="text" name="route_raw_board" id="board_route_raw" placeholder="e.g. jiuchuan-s3">
+                            <span class="hint">Raw board name sent by the device (e.g. jiuchuan-s3)</span>
+                        </div>
+                        
+                        <div class="field">
+                            <label>Route Version Suffix (Optional)</label>
+                            <input type="text" name="route_suffix" id="board_route_suffix" placeholder="e.g. -r2">
+                            <span class="hint">Suffix in firmware version triggering this mapping (e.g. -r2)</span>
+                        </div>
+                        
+                        <div class="actions">
+                            <button type="submit" id="board_save_btn">Add Board</button>
+                            <button type="button" id="board_cancel_btn" class="btn btn-secondary" style="display:none;" onclick="cancelEditBoard()">Cancel</button>
+                        </div>
+                    </form>
                 </div>
             </section>
 
@@ -1380,6 +1462,7 @@ $historyCount = count($history);
                             <th class="col-model">Model</th>
                             <th class="col-board">Board</th>
                             <th class="col-version">Version</th>
+                            <th class="col-stats">Devices</th>
                             <th class="col-file hide-mobile">File</th>
                             <th class="col-size hide-mobile">Size</th>
                             <th class="col-notes">Release Notes</th>
@@ -1388,11 +1471,44 @@ $historyCount = count($history);
                         </tr>
 
                         <?php foreach ($config as $board => $fw): ?>
+                        <?php
+                            $targetVersion = (string)($fw["version"] ?? "");
+                            $totalDevices = 0;
+                            $updatedDevices = 0;
+                            $versionCounts = [];
+                            foreach ($deviceStats as $devId => $dev) {
+                                if (($dev["board"] ?? "") === $board) {
+                                    $totalDevices++;
+                                    $devVer = (string)($dev["version"] ?? "");
+                                    if ($devVer === $targetVersion) {
+                                        $updatedDevices++;
+                                    }
+                                    if ($devVer !== "") {
+                                        $versionCounts[$devVer] = ($versionCounts[$devVer] ?? 0) + 1;
+                                    }
+                                }
+                            }
+                            $breakdownParts = [];
+                            foreach ($versionCounts as $v => $c) {
+                                $breakdownParts[] = "$v: $c device" . ($c > 1 ? "s" : "");
+                            }
+                            $tooltip = count($breakdownParts) > 0 ? "Version breakdown:\n" . implode("\n", $breakdownParts) : "No check-ins yet";
+                        ?>
                         <tr>
                             <td class="col-date"><?= htmlspecialchars($fw["date"] ?? "") ?></td>
                             <td class="col-model"><?= htmlspecialchars($fw["model"] ?? "") ?></td>
                             <td class="col-board"><?= htmlspecialchars($board) ?></td>
                             <td class="col-version"><?= htmlspecialchars($fw["version"] ?? "") ?></td>
+                            <td class="col-stats">
+                                <?php if ($totalDevices > 0): ?>
+                                    <strong><?= $updatedDevices ?> / <?= $totalDevices ?></strong>
+                                    <div style="font-size: 11px; color: var(--muted);" title="<?= htmlspecialchars($tooltip) ?>">
+                                        <?= round(($updatedDevices / $totalDevices) * 100) ?>% updated <span style="cursor: help; text-decoration: underline dotted; color: var(--accent);">[?]</span>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="muted" style="font-size: 11px;">0 devices seen</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="col-file hide-mobile mono"><?= htmlspecialchars(basename($fw["file"] ?? "")) ?></td>
                             <td class="col-size hide-mobile compact"><?= number_format((int)($fw["size"] ?? 0)) ?></td>
                             <td class="col-notes notes-cell compact"><?= nl2br(htmlspecialchars($fw["notes"] ?? "")) ?></td>
@@ -1609,18 +1725,21 @@ $historyCount = count($history);
 
 <script>
 function updateAssetBoard() {
+    const map = <?= json_encode($models) ?>;
     document.getElementById("asset_board").value =
-        modelsMap[document.getElementById("asset_model").value] || "";
+        map[document.getElementById("asset_model").value] || "";
 }
 
 function updateOverrideBoard() {
+    const map = <?= json_encode($models) ?>;
     document.getElementById("override_board").value =
-        modelsMap[document.getElementById("override_model").value] || "";
+        map[document.getElementById("override_model").value] || "";
 }
 
 function updateAssetOverrideBoard() {
+    const map = <?= json_encode($models) ?>;
     document.getElementById("asset_override_board").value =
-        modelsMap[document.getElementById("asset_override_model").value] || "";
+        map[document.getElementById("asset_override_model").value] || "";
 }
 
 function updateAssetOverrideSource() {

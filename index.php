@@ -72,10 +72,55 @@ $raw  = file_get_contents("php://input");
 $body = json_decode($raw, true);
 
 $boardType = strtolower($body["board"]["type"] ?? "");
+$rawBoardType = $boardType;
 $curVer    = $body["application"]["version"] ?? "0.0.0";
 $curAssetChecksum = strtolower(trim((string)($body["assets"]["checksum"] ?? "")));
 $uuid      = trim((string)($body["uuid"] ?? ""));
 $macAddr   = strtolower(trim((string)($body["mac_address"] ?? ($body["board"]["mac"] ?? ""))));
+
+// Parse dynamic mapping rules from boards.json
+$boardsFile = __DIR__ . "/boards.json";
+$boardsMeta = file_exists($boardsFile) ? json_decode(file_get_contents($boardsFile), true) : [];
+if (is_array($boardsMeta)) {
+    foreach ($boardsMeta as $bk => $meta) {
+        if (!empty($meta["route_raw_board"]) && !empty($meta["route_suffix"])) {
+            $rawMatch = (strtolower($meta["route_raw_board"]) === $boardType);
+            $suffixMatch = (stripos($curVer, $meta["route_suffix"]) !== false);
+            if ($rawMatch && $suffixMatch) {
+                $boardType = $bk;
+                break;
+            }
+        }
+    }
+}
+
+// ================================
+// RECORD DEVICE STATS
+// ================================
+$deviceId = $uuid ?: $macAddr;
+if ($deviceId !== "") {
+    $statsPath = __DIR__ . "/device_stats.json";
+    $lockFile = $statsPath . ".lock";
+    $lockHandle = @fopen($lockFile, "w");
+    if ($lockHandle) {
+        flock($lockHandle, LOCK_EX);
+        $stats = [];
+        if (file_exists($statsPath)) {
+            $stats = json_decode(file_get_contents($statsPath), true);
+            if (!is_array($stats)) $stats = [];
+        }
+        $stats[$deviceId] = [
+            "board" => $boardType,
+            "mac" => $macAddr,
+            "uuid" => $uuid,
+            "version" => $curVer,
+            "last_seen" => date("Y-m-d H:i:s")
+        ];
+        file_put_contents($statsPath, json_encode($stats, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        flock($lockHandle, LOCK_UN);
+        fclose($lockHandle);
+    }
+}
 
 // ================================
 // VERSION COMPARE
@@ -139,7 +184,7 @@ function checksumDiffers($current, $target) {
 // ================================
 $response = [
     "firmware" => [
-        "name"       => $boardType ?: "unknown",
+        "name"       => $rawBoardType ?: "unknown",
         "version"    => $curVer,
         "url"        => "",
         "assets_url" => "",
@@ -188,7 +233,7 @@ if ($deviceOverride) {
                 saveDeviceOverrides($deviceOverridePath, $deviceOverrides);
             }
 
-            $response["firmware"]["name"]    = $boardType;
+            $response["firmware"]["name"]    = $rawBoardType;
             $response["firmware"]["version"] = (string)($overrideData["version"] ?? $curVer);
             $response["firmware"]["url"]     = $fwBaseUrl . $fileRel;
             $response["firmware"]["size"]    = filesize($fwPath);
@@ -207,7 +252,7 @@ if ($deviceOverride) {
     $force   = (int)($cfg["force"] ?? 0);
 
     // luôn phản hồi enable/force theo config để thiết bị nhìn thấy trạng thái
-    $response["firmware"]["name"]   = $boardType;
+    $response["firmware"]["name"]   = $rawBoardType;
     $response["firmware"]["force"]  = $force;
     $response["firmware"]["enable"] = $enable;
 
