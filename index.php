@@ -363,4 +363,17 @@ if ($assetOverride) {
     }
 }
 
+$response["debug"] = [
+    "macAddr" => $macAddr,
+    "uuid" => $uuid,
+    "boardType" => $boardType,
+    "rawBoardType" => $rawBoardType,
+    "curVer" => $curVer,
+    "override_matched" => $deviceOverride ? $deviceOverride["key"] : "no",
+    "override_file" => $deviceOverride ? ($deviceOverride["data"]["file"] ?? "") : "",
+    "override_file_exists" => $deviceOverride ? (file_exists($fwBasePath . ($deviceOverride["data"]["file"] ?? "")) ? "yes" : "no") : "n/a",
+    "fwPath_checked" => $deviceOverride ? ($fwBasePath . ($deviceOverride["data"]["file"] ?? "")) : ($fwBasePath . ($config[$boardType]["file"] ?? "")),
+    "config_file_exists" => (isset($config[$boardType]) && !empty($config[$boardType]["file"])) ? (file_exists($fwBasePath . $config[$boardType]["file"]) ? "yes" : "no") : "n/a"
+];
+
 echo json_encode($response, JSON_UNESCAPED_SLASHES);
