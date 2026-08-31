@@ -62,7 +62,7 @@ if (!is_array($deviceStats)) $deviceStats = [];
 // ================================
 function extractVersionFromBin($file) {
     $data = file_get_contents($file);
-    preg_match('/\d+\.\d+\.\d+(\.\d+)?/', $data, $m);
+    preg_match('/\d+\.\d+\.\d+(?:\.\d+)?(?:-[A-Za-z0-9]+)?/', $data, $m);
     return $m[0] ?? "0.0.0";
 }
 

@@ -125,20 +125,47 @@ if ($deviceId !== "") {
 // ================================
 // VERSION COMPARE
 // ================================
-function verArr($v) {
-    $parts = explode(".", (string)$v);
-    return array_map("intval", $parts);
+function parseVersion($v) {
+    $parts = explode("-", (string)$v, 2);
+    $base = $parts[0];
+    $suffix = $parts[1] ?? "";
+    
+    $baseNums = array_map("intval", explode(".", $base));
+    
+    $suffixNum = 0;
+    if ($suffix !== "") {
+        preg_match('/\d+/', $suffix, $m);
+        $suffixNum = isset($m[0]) ? (int)$m[0] : 0;
+    }
+    
+    return [
+        "nums" => $baseNums,
+        "suffix_str" => strtolower($suffix),
+        "suffix_num" => $suffixNum
+    ];
 }
 
 function isNewer($cur, $new) {
-    $c = verArr($cur);
-    $n = verArr($new);
-    $len = min(count($c), count($n));
+    $c = parseVersion($cur);
+    $n = parseVersion($new);
+    
+    $len = min(count($c["nums"]), count($n["nums"]));
     for ($i = 0; $i < $len; $i++) {
-        if ($n[$i] > $c[$i]) return true;
-        if ($n[$i] < $c[$i]) return false;
+        if ($n["nums"][$i] > $c["nums"][$i]) return true;
+        if ($n["nums"][$i] < $c["nums"][$i]) return false;
     }
-    return count($n) > count($c);
+    
+    if (count($n["nums"]) > count($c["nums"])) return true;
+    if (count($n["nums"]) < count($c["nums"])) return false;
+    
+    if ($n["suffix_num"] > $c["suffix_num"]) return true;
+    if ($n["suffix_num"] < $c["suffix_num"]) return false;
+    
+    if ($n["suffix_str"] !== $c["suffix_str"]) {
+        return strcmp($n["suffix_str"], $c["suffix_str"]) > 0;
+    }
+    
+    return false;
 }
 
 function normalizeIdentifier($value) {
